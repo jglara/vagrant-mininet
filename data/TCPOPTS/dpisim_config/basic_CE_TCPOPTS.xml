@@ -1,0 +1,175 @@
+<timestamped-configuration>
+    <configuration>
+        <services>
+            <epg>
+                <pgw>
+                    <license>
+                        <realtime-charging/>
+                        <static-access-control/>
+                        <dynamic-access-control/>
+                        <packet-inspection/>
+                        <skype/>
+                        <p2p/>
+                        <voip-im/>
+                        <heuristic-streaming/>
+                        <time-based-bearer-charging/>
+                        <automatic-redirection/>
+                        <tcp-setup-deferred-charging/>
+                    </license>
+                    <!-- SERVICE SETS (BEGIN) -->
+                    <service-set>
+                        <name>default</name>
+                          <traffic-optimization-profile>1</traffic-optimization-profile>
+                          <traffic-optimization-tcp-selection>whitelist1</traffic-optimization-tcp-selection>
+                        <service-identification>
+                            <service-data-flow-id>
+                                <default>
+                                    <payload>0</payload>
+                                </default>
+                            </service-data-flow-id>
+                            <header-rule-sets>
+                                <name>hrs-http</name>
+                            </header-rule-sets>
+                        </service-identification>
+                    </service-set>
+                    <!-- SERVICE SETS (END) -->
+                   <traffic-optimization>
+                            <tcp-algorithm>
+                                <name>4</name>
+				<parameter>1-300000</parameter>
+                                <parameter>2-120</parameter>
+                                <parameter>3-2</parameter>
+                                <parameter>4-50000</parameter>
+                                <parameter>5-1</parameter>
+                                <parameter>6-0</parameter>
+                                <parameter>7-3</parameter>
+                                <parameter>8-10000</parameter>
+                                <parameter>9-100</parameter>
+                                <parameter>10-50</parameter>
+                                <parameter>11-95</parameter>
+                                <parameter>12-0</parameter>
+                                <parameter>13-80</parameter>
+                                <parameter>14-20</parameter>
+                                <parameter>15-1048576</parameter>
+                                <parameter>16-0</parameter>
+                                <parameter>17-400</parameter>
+                                <parameter>18-7</parameter>
+                                <parameter>19-0</parameter>
+                                <parameter>20-20</parameter>
+                                <parameter>21-0</parameter>
+                                <parameter>22-45</parameter>
+                                <parameter>23-0</parameter>
+                                <parameter>24-6100</parameter>
+                                <parameter>25-6000</parameter>
+                                <type>4</type>
+                            </tcp-algorithm>
+                            <profile>
+                                <name>1</name>
+                                <tcp-algorithm>4</tcp-algorithm>
+                            </profile>
+			    <tcp-selection>
+			      <name>whitelist1</name>
+			      <type>whitelist</type>
+			      <header-rule>
+				<name>tcp-opts-port-80</name>
+				<network-port>80</network-port>
+			      </header-rule>
+			      <header-rule>
+				<name>cell-ip</name>
+				<ms-address>192.168.1.10</ms-address>
+			      </header-rule>
+			    </tcp-selection>
+                   </traffic-optimization>
+
+                    <rule-space>
+                        <name>rs-default</name>
+                        <service-set>default</service-set>
+                        <rating-group>
+                            <default>
+                                <use-access-control-rule/>
+                            </default>
+                        </rating-group>
+                        <deferred-charging>
+                            <tcp-setup>
+                                <default>enabled</default>
+                            </tcp-setup>
+                        </deferred-charging>
+                    </rule-space>
+
+                    <!-- RULES AND RULE SETS (BEGIN) -->
+                    <service-identification>
+                        <!-- CONTENT ENRICHMENT -->
+                        <flow-limits>
+                            <max-user-child>500</max-user-child>
+                            <!-- We want the same maximum number of flows than in SASN TC: 1474545 -->
+                            <!-- max-node-flow parameter is shared between the PPB cores, that is different in Juniper or SSR -->
+                            <!-- Right now translation is done using Juniper constants (28 PPB cores, so max-node-flow parameter is divided by 28 = 1474545), -->
+                            <!-- When GSNCR00009031 is introducedm this number should be recalculated taking into account SSR contants -->
+                            <max-node-flow>41287260</max-node-flow>
+                        </flow-limits>
+
+                        <!-- HTTP rules -->
+                        <header-rule-set>
+                            <name>hrs-http</name>
+                            <rule>
+                                <name>hr-http</name>
+                            </rule>
+                        </header-rule-set>
+                        <!-- HEADER RULE SETS (END) -->
+
+                        <!-- HTTP rules -->
+                        <header-rule>
+                            <name>hr-http</name>
+                            <term>
+                                <name>hr-http-t1</name>
+                                <from>
+                                    <protocol><tcp></tcp></protocol>
+                                    <network-port>80</network-port>
+                                </from>
+                                <then>
+                                    <service-data-flow-id>
+                                        <payload>0</payload>
+                                    </service-data-flow-id>
+                                    <protocol-inspection>
+                                        <!-- HTTP rules -->
+                                        <http-wsp-rule-set>http_rs1</http-wsp-rule-set>
+                                    </protocol-inspection>
+                                </then>
+                            </term>
+                        </header-rule>
+                        <!-- HEADER RULES (END) -->
+                        <!-- DPI RULES SETS (BEGIN) -->
+                        <http-wsp-rule-set>
+                            <name>http_rs1</name>
+                            <!-- Content Enrichment -->
+                            <rule>
+                                <name>http_enrichment_r1</name>
+                            </rule>
+                        </http-wsp-rule-set>
+                        <!-- DPI RULES SETS (END) -->
+
+                        <!-- DPI RULES (BEGIN) -->
+                        <!-- Content Enrichment -->
+                        <http-wsp-rule>
+                            <name>http_enrichment_r1</name>
+                            <term>
+                                <name>http_enrichment1</name>
+                                <from>
+                                    <uri>
+                                      <contains>google</contains>
+                                    </uri>
+                                </from>
+                                <then>
+                                  <payload>501</payload>
+                                </then>
+                            </term>
+                        </http-wsp-rule>
+                        <!-- DPI RULES (END) -->
+                    </service-identification>
+                    <!-- RULES AND RULE SETS (END) -->
+                </pgw>
+            </epg>
+        </services>
+    </configuration>
+</timestamped-configuration>
+

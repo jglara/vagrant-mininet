@@ -1,0 +1,25 @@
+dpisim-configuration:
+    log-file:                        /vagrant_data/TCPOPTS/dpisim_config/logs/dpi.logfile.log
+    flavour:                         epg
+    cli: True
+    cli-port: 5555
+    enable-logs:                     True
+    dpi-all-logs:                    True
+    backend-config-file:             /vagrant_data/TCPOPTS/dpisim_config/basic_CE_TCPOPTS.xml
+    output-section:
+        snapshot-cmd:                /vagrant_data/TCPOPTS/dpisim_config/full_snapshot.cmd
+        snapshot-output:             /vagrant_data/TCPOPTS/dpisim_config/logs/snapshot.out
+    user-values-section:
+        service-set:
+                                     - default
+    routing:                         true
+    routing-timer:                   true
+    devUp:			     r3-eth1
+    devDown:			     r3-eth3
+    filter-down: "dst net 192.168.1.0/24"
+    filter-up: "src net 192.168.1.0/24"
+    injection-section:
+        cell-ip:
+                                     - 192.168.1.10
+        mask-address:
+                                     - 255.255.255.0
