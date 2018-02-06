@@ -48,7 +48,7 @@ class MyRouter( Node ):
         super( MyRouter, self).config( **params )
         self.cmd( 'echo $SHELL ; for d in $(ip li | awk \'BEGIN {FS=":"} /^[0-9]+:(.*):/ {print $2}\'  | grep -v lo | cut -d\'@\' -f 1);do ethtool -K $d tso off gso off tx off rx off; done')
 
-        self.cmd( 'echo $SHELL ; for d in $(ip li | awk \'BEGIN {{FS=":"}} /^[0-9]+:(.*):/ {{print $2}}\'  | grep -v lo | cut -d\'@\' -f 1);do tshark -i $d -w {0}/$d.cap -F pcap & echo "tshark $d" ; done'.format(args.dir))
+        self.cmd( 'echo $SHELL ; for d in $(ip li | awk \'BEGIN {{FS=":"}} /^[0-9]+:(.*):/ {{print $2}}\'  | grep -v lo | cut -d\'@\' -f 1);do tshark -i $d -w /tmp/{0}/$d.cap -F pcap & echo "tshark $d" ; done'.format(args.dir))
 
         self.proc = self.popen( '/vagrant_data/TCPOPTS/dpisim_config/dpisim.sh dpisim_config.yaml')
 
@@ -81,7 +81,7 @@ class MyHost( Node ):
         super( MyHost, self).config( **params )
         self.cmd( 'echo $SHELL ; for d in $(ip li | awk \'BEGIN {FS=":"} /^[0-9]+:(.*):/ {print $2}\'  | grep -v lo | cut -d\'@\' -f 1);do ethtool -K $d tso off gso off tx off rx off; done')
 
-        self.cmd( 'echo $SHELL ; for d in $(ip li | awk \'BEGIN {{FS=":"}} /^[0-9]+:(.*):/ {{print $2}}\'  | grep -v lo | cut -d\'@\' -f 1);do tshark -i $d -w {0}/$d.cap -F pcap & echo "tshark $d" ; done'.format(args.dir))
+        self.cmd( 'echo $SHELL ; for d in $(ip li | awk \'BEGIN {{FS=":"}} /^[0-9]+:(.*):/ {{print $2}}\'  | grep -v lo | cut -d\'@\' -f 1);do tshark -i $d -w /tmp/{0}/$d.cap -F pcap & echo "tshark $d" ; done'.format(args.dir))
 
 
     def terminate( self ):
@@ -162,11 +162,11 @@ class NetworkTopo( Topo ):
         router1 = self.addNode( 'r1', cls=MyForwardingRouter, ip='192.168.1.20/24',
                                defaultRoute='via 192.168.3.40')
 
-        router2 = self.addNode( 'r2', cls=MyRouter, ip='192.168.2.30/24',
+        router2 = self.addNode( 'r2', cls=MyForwardingRouter, ip='192.168.2.30/24',
                                defaultRoute='via 192.168.5.50')
 
 
-        dpisim = self.addNode( 'r3', cls=MyForwardingRouter, ip='192.168.3.40/24', defaultRoute='via 192.168.5.50' )
+        dpisim = self.addNode( 'r3', cls=MyRouter, ip='192.168.3.40/24', defaultRoute='via 192.168.5.50' )
 
         nat = self.addNode( 'nat0', cls=MyNAT, ip='192.168.5.50/24', subnet='192.168.0.0/16', inetIntf='eth1', localIntf='nat0-eth1', inNamespace=False)
         server1 = self.addNode( 's1', cls=MyServer, ip='192.168.5.51/24', subnet='192.168.0.0/16')
@@ -306,17 +306,11 @@ if __name__ == '__main__':
     
     # Expt parameters
     args = parser.parse_args()
-    
-    if not os.path.exists(args.dir):
-        os.makedirs(args.dir)
-    else:
-        for f in os.listdir(args.dir):
-            os.remove(join (args.dir,f))
-        
+
+
+    os.system("mkdir /tmp/{0} ; mkdir ./{0} ; rm /tmp/{0}/* ; rm ./{0}/*".format(args.dir))
     run()
+    os.system("mv /tmp/{0}/* ./{0} ; chmod o=rw ./{0}/*".format(args.dir))
 
 
-    if os.path.exists(args.dir):
-        for f in os.listdir(args.dir):
-            os.chown(join (args.dir,f), 1000, 1000) # mininet:mininet
         
