@@ -33,7 +33,9 @@ Vagrant.configure("2") do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
      apt-get update
-     apt-get install -y iperf3 wireshark tshark nginx aria2 emacs 
+#     apt-get install -y -f tshark
+     apt-get install -y emacs
+     apt-get install -y iperf3 nginx aria2
      apt-get install -y libpython2.7
      git clone git://github.com/mininet/mininet
      mininet/util/install.sh -nfv
